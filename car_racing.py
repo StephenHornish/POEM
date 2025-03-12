@@ -245,7 +245,7 @@ class CarRacing(gym.Env, EzPickle):
         self.prev_reward = 0.0
         self.verbose = verbose
         self.new_lap = False
-        self.distance_ahead = 0.0
+        self.speed = 0.0
         self.fd_tile = fixtureDef(
             shape=polygonShape(vertices=[(0, 0), (1, 0), (1, -1), (0, -1)])
         )
@@ -538,6 +538,53 @@ class CarRacing(gym.Env, EzPickle):
         if self.render_mode == "human":
             self.render()
         return self.step(None)[0], {}
+    def read_sensors(self, image):
+        if image is None:
+            return "Error: No image provided to read_sensors"
+
+        sensor_location = (49, 78)
+        sensor_reading = []
+        sensor_directions = ["left_horizontal", "right_horizontal", "right_diagonal", "left_diagonal", "vertical"]
+
+        # Anonymous inner function (nested function)
+        def detect_color_change(image_observation, sensor_location, direction='horizontal', max_distance=78):
+            if image_observation is None:
+                return "Error: No Observation image"
+
+            start_x, start_y = sensor_location
+            gray_image = cv2.cvtColor(image_observation, cv2.COLOR_BGR2GRAY)
+            initial_color = int(gray_image[start_y, start_x])  
+
+            movement_map = {
+                "left_horizontal": (-1, 0),
+                "right_horizontal": (1, 0),
+                "right_diagonal": (1, -1),
+                "left_diagonal": (-1, -1),
+                "vertical": (0, -1),
+            }
+            delta_x, delta_y = movement_map.get(direction, (None, None))
+            if delta_x is None:
+                return "Error: Direction given is invalid."
+
+            threshold = 30  
+            for distance in range(1, max_distance):
+                new_x = start_x + distance * delta_x
+                new_y = start_y + distance * delta_y
+
+                if new_x < 0 or new_y < 0 or new_x >= gray_image.shape[1] or new_y >= gray_image.shape[0]:
+                    return max_distance
+
+                new_color = int(gray_image[new_y, new_x])
+                if abs(new_color - initial_color) > threshold:
+                    return distance
+
+            return max_distance
+
+        for direction in sensor_directions: 
+            result = detect_color_change(image, sensor_location, direction)
+            sensor_reading.append(result)
+
+        return sensor_reading
 
     def step(self, action: Union[np.ndarray, int]):
         assert self.car is not None
@@ -560,44 +607,9 @@ class CarRacing(gym.Env, EzPickle):
         self.car.step(1.0 / FPS)
         self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
         self.t += 1.0 / FPS
-        def get_distance_ahead():
-            """
-            Casts a ray straight ahead from the car to detect how far the track edge is.
-            """
-            car_pos = self.car.hull.position  # Car's current position
-            car_angle = self.car.hull.angle  # Car's facing direction
-
-            # ✅ Define raycast direction (straight ahead)
-            max_sensor_length = 100.0  # Max detection range (100 meters)
-            sensor_dir = np.array([np.cos(car_angle), np.sin(car_angle)])  # Forward direction
-            endpoint = car_pos + sensor_dir * max_sensor_length  # End point of the ray
-
-            # ✅ Set up the raycast callback
-            class RayCastCallback(Box2D.b2RayCastCallback):
-                def __init__(self):
-                    super().__init__()
-                    self.hit = False
-                    self.fraction = 1.0  # Default: no obstacle detected
-
-                def ReportFixture(self, fixture, point, normal, fraction):
-                    if hasattr(fixture.body, "userData") and hasattr(fixture.body.userData, "road_friction"):
-                        # ✅ This is a road tile (not grass)
-                        self.hit = True
-                        self.fraction = fraction  # Save how far the hit happened
-                        return fraction  # Stop after the first hit
-                    return -1  # Ignore if it's not a road tile
-
-            callback = RayCastCallback()
-            self.world.RayCast(callback, car_pos, endpoint)
-
-            # ✅ Return actual distance to the track edge
-            if callback.hit:
-                return max_sensor_length * callback.fraction  # Scale by fraction of max range
-            else:
-                return max_sensor_length  # No obstacle detected (full range)
-
+        
         self.state = self._render("state_pixels")
-
+        
         step_reward = 0
         terminated = False
         truncated = False
@@ -621,8 +633,9 @@ class CarRacing(gym.Env, EzPickle):
 
         if self.render_mode == "human":
             self.render()
-        info["distance_ahead"] = get_distance_ahead()
-        self.distance_ahead = get_distance_ahead()
+        print(type(self.state))  # Check what type it is
+        print(self.state)
+        self.read_sensors(self.state)
         return self.state, step_reward, terminated, truncated, info
         
     def render(self):
@@ -681,7 +694,7 @@ class CarRacing(gym.Env, EzPickle):
 
 
         # Render distance text (White text with Black background)
-        distance_text = font.render(f"Distance Ahead: {self.distance_ahead:.2f} m", True, (255, 255, 255), (0, 0, 0))
+        distance_text = font.render(f"Current Speed: {self.speed:.2f} m", True, (255, 255, 255), (0, 0, 0))
         distance_text_rect = distance_text.get_rect()
         distance_text_rect.center = (200, WINDOW_H - WINDOW_H * 3.5 / 40.0)
         self.surf.blit(distance_text, distance_text_rect)
@@ -785,7 +798,7 @@ class CarRacing(gym.Env, EzPickle):
             np.square(self.car.hull.linearVelocity[0])
             + np.square(self.car.hull.linearVelocity[1])
         )
-
+        self.speed = true_speed
         # simple wrapper to render if the indicator value is above a threshold
         def render_if_min(value, points, color):
             if abs(value) > 1e-4:
