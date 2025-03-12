@@ -66,10 +66,9 @@ The training algorithm relies on a modified version of the Car Racing environmen
 
    **Note:** This manual replacement is required for the training algorithm to work correctly. We're working on a more elegant solution for future updates.
 
-## Demo
+## Tutorial
 
-For a demonstration of this project, check out the YouTube tutorial:
-[Reinforcement Learning for Car Racing](https://www.youtube.com/watch?v=gMgj4pSHLww&ab_channel=JohnnyCode)
+For a tutorial on setting up project (https://www.youtube.com/watch?v=gMgj4pSHLww&ab_channel=JohnnyCode)
 
 ## License
 
@@ -79,4 +78,3 @@ For a demonstration of this project, check out the YouTube tutorial:
 
 - Gymnasium (formerly OpenAI Gym) for the Car Racing environment
 - Stable Baselines3 for the PPO implementation
-- Johnny Code for the helpful tutorial that inspired this project
