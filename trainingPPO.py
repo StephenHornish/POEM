@@ -11,23 +11,22 @@ from stable_baselines3 import PPO
 # Create environment
 env = gym.make("CarRacing-v3",render_mode = "human")
 # Create PPO model with TensorBoard logging
-model = PPO("CnnPolicy", env, verbose=1, tensorboard_log="logs/ppo_car_racing")
+model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/ppo_car_racing")
 rewards_per_episode = []
 num_episodes = 100
 for ep in range(num_episodes):
     obs, _ = env.reset() #resets the enviornment to its initial state and states the simulation
     #general nature of observtion
     print(env.observation_space)
-     #Box(0, 255, (96, 96, 3), uint8)
-     #each observation is a single 96×96 RGB frame with values ranging from 0 to 255 (standard for 8-bit images)
+     #Box(0.0, 1.0, (6,), float32)
     total_reward = 0
     done = False
 
     while not done:
         action, _ = model.predict(obs) #model is given an observation it preicts based on/Get the policy action from an observation 
-        cv2.imwrite("frame.png", cv2.cvtColor(obs, cv2.COLOR_RGB2BGR))
+        cv2.imwrite("frame.png", cv2.cvtColor(obs, cv2.COLOR_RGB2BGR))#saves the last frame for debugging purposes
         obs, reward, done, _, info = env.step(action) #return self.state, step_reward, terminated/bool, truncated, info
-        print(info["state"]) #THIS IS THE STATE WE WANT SHOULD BE  REPLASE THE OBS value eventually 
+        print(obs) #Printing the 6D array
         total_reward += reward #tracking the total reward for this episode
 
     rewards_per_episode.append(total_reward) #totals teh rewards 

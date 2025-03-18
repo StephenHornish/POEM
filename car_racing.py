@@ -261,9 +261,9 @@ class CarRacing(gym.Env, EzPickle):
             self.action_space = spaces.Discrete(5)
             # do nothing, left, right, gas, brake
 
-        self.observation_space = spaces.Box(
-            low=0, high=255, shape=(STATE_H, STATE_W, 3), dtype=np.uint8
-        )
+        # Define a 6D observation space for the sensor readings (values between 0 and 1)
+        self.observation_space = spaces.Box(low=0, high=1, shape=(6,), dtype=np.float32)
+
 
         self.render_mode = render_mode
 
@@ -545,7 +545,7 @@ class CarRacing(gym.Env, EzPickle):
         sensor_location = (49, 78)
         sensor_reading = []
         sensor_directions = ["left_horizontal", "right_horizontal", "right_diagonal", "left_diagonal", "vertical"]
-        sensor_normalization = [23,23,85,85,78,100]
+        sensor_normalization = [30,30,85,85,78,100]
         
         def detect_color_change(image_observation, sensor_location, direction='horizontal', max_distance=78):
             if image_observation is None:
@@ -609,8 +609,8 @@ class CarRacing(gym.Env, EzPickle):
         self.car.step(1.0 / FPS)
         self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
         self.t += 1.0 / FPS
-        
-        self.state = self._render("state_pixels")
+        image = self._render("state_pixels")
+        self.state = self.read_sensors(image)
         
         step_reward = 0
         terminated = False
@@ -632,14 +632,13 @@ class CarRacing(gym.Env, EzPickle):
                 terminated = True
                 info["lap_finished"] = False
                 step_reward = -100
-        sensor_reading = self.read_sensors(self.state)
          #killswitch if the car goes off track and the game time has passed 1 sec
-        terminated = any(x > 1 for x in sensor_reading) and self.t > 1
+        terminated = any(x > 1 for x in self.state) and self.t > 1
         if self.render_mode == "human":
             self.render()
         #STATE VALUE IS STORED HERE
-        info["state"] = sensor_reading
-        return self.state, step_reward, terminated, truncated, info
+        info["state"] = self.state
+        return np.array(self.state, dtype=np.float32), step_reward, terminated, truncated, info
 
         
     def render(self):
