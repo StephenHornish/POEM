@@ -545,8 +545,8 @@ class CarRacing(gym.Env, EzPickle):
         sensor_location = (49, 78)
         sensor_reading = []
         sensor_directions = ["left_horizontal", "right_horizontal", "right_diagonal", "left_diagonal", "vertical"]
-
-        # Anonymous inner function (nested function)
+        sensor_normalization = [21,21,78,78,78]
+        
         def detect_color_change(image_observation, sensor_location, direction='horizontal', max_distance=78):
             if image_observation is None:
                 return "Error: No Observation image"
@@ -566,7 +566,7 @@ class CarRacing(gym.Env, EzPickle):
             if delta_x is None:
                 return "Error: Direction given is invalid."
 
-            threshold = 30  
+            threshold = 40  #hyper parameter that determines when a color is recognized 
             for distance in range(1, max_distance):
                 new_x = start_x + distance * delta_x
                 new_y = start_y + distance * delta_y
@@ -583,8 +583,8 @@ class CarRacing(gym.Env, EzPickle):
         for direction in sensor_directions: 
             result = detect_color_change(image, sensor_location, direction)
             sensor_reading.append(result)
-
-        return sensor_reading
+        normalzied_reading = [x / y for x, y in zip(sensor_reading, sensor_normalization)]
+        return normalzied_reading
 
     def step(self, action: Union[np.ndarray, int]):
         assert self.car is not None
@@ -630,13 +630,15 @@ class CarRacing(gym.Env, EzPickle):
                 terminated = True
                 info["lap_finished"] = False
                 step_reward = -100
-
+        sensor_reading = self.read_sensors(self.state)
+         #killswitch if the car goes off track and the game time has passed 1 sec
+        terminated = any(x > 1 for x in sensor_reading) and self.t > 1 
         if self.render_mode == "human":
             self.render()
-        print(type(self.state))  # Check what type it is
-        print(self.state)
-        self.read_sensors(self.state)
+            print(sensor_reading )
+            
         return self.state, step_reward, terminated, truncated, info
+
         
     def render(self):
         if self.render_mode is None:
