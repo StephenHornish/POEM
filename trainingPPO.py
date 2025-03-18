@@ -26,7 +26,8 @@ for ep in range(num_episodes):
     while not done:
         action, _ = model.predict(obs) #model is given an observation it preicts based on/Get the policy action from an observation 
         cv2.imwrite("frame.png", cv2.cvtColor(obs, cv2.COLOR_RGB2BGR))
-        obs, reward, done, _, _ = env.step(action) #return self.state, step_reward, terminated/bool, truncated, info
+        obs, reward, done, _, info = env.step(action) #return self.state, step_reward, terminated/bool, truncated, info
+        print(info["state"]) #THIS IS THE STATE WE WANT SHOULD BE  REPLASE THE OBS value eventually 
         total_reward += reward #tracking the total reward for this episode
 
     rewards_per_episode.append(total_reward) #totals teh rewards 

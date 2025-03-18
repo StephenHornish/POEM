@@ -545,7 +545,7 @@ class CarRacing(gym.Env, EzPickle):
         sensor_location = (49, 78)
         sensor_reading = []
         sensor_directions = ["left_horizontal", "right_horizontal", "right_diagonal", "left_diagonal", "vertical"]
-        sensor_normalization = [21,21,78,78,78]
+        sensor_normalization = [23,23,85,85,78,100]
         
         def detect_color_change(image_observation, sensor_location, direction='horizontal', max_distance=78):
             if image_observation is None:
@@ -583,8 +583,10 @@ class CarRacing(gym.Env, EzPickle):
         for direction in sensor_directions: 
             result = detect_color_change(image, sensor_location, direction)
             sensor_reading.append(result)
-        normalzied_reading = [x / y for x, y in zip(sensor_reading, sensor_normalization)]
-        return normalzied_reading
+        sensor_reading.append(self.speed)
+        normalized_reading = [float("{:.3g}".format(x / y)) for x, y in zip(sensor_reading, sensor_normalization)]
+        
+        return normalized_reading
 
     def step(self, action: Union[np.ndarray, int]):
         assert self.car is not None
@@ -632,11 +634,11 @@ class CarRacing(gym.Env, EzPickle):
                 step_reward = -100
         sensor_reading = self.read_sensors(self.state)
          #killswitch if the car goes off track and the game time has passed 1 sec
-        terminated = any(x > 1 for x in sensor_reading) and self.t > 1 
+        terminated = any(x > 1 for x in sensor_reading) and self.t > 1
         if self.render_mode == "human":
             self.render()
-            print(sensor_reading )
-            
+        #STATE VALUE IS STORED HERE
+        info["state"] = sensor_reading
         return self.state, step_reward, terminated, truncated, info
 
         
@@ -703,8 +705,8 @@ class CarRacing(gym.Env, EzPickle):
         # Reward Text
         reward_text = font.render("%04i" % self.reward, True, (255, 255, 255), (0, 0, 0))
         reward_text_rect = reward_text.get_rect()
-        reward_text_rect.center = (60, WINDOW_H - WINDOW_H * 2.5 / 40.0)  # 🔹 Original position
-        self.surf.blit(reward_text, reward_text_rect)  # ✅ Draw reward on screen
+        reward_text_rect.center = (60, WINDOW_H - WINDOW_H * 2.5 / 40.0)  #original position
+        self.surf.blit(reward_text, reward_text_rect)  #draws reward on screen
         """""
         self._render_indicators(WINDOW_W, WINDOW_H)
 
