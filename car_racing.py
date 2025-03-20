@@ -631,9 +631,12 @@ class CarRacing(gym.Env, EzPickle):
             if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                 terminated = True
                 info["lap_finished"] = False
-                step_reward = -100
+                step_reward = -200
          #killswitch if the car goes off track and the game time has passed 1 sec
-        terminated = any(x > 1 for x in self.state) and self.t > 1
+        if any(x > 1 for x in self.state) and self.t > 1:
+            terminated = True
+            info["lap_finished"] = False
+            step_reward = -100
         if self.render_mode == "human":
             self.render()
         #STATE VALUE IS STORED HERE
