@@ -147,7 +147,7 @@ class CarRacing(gym.Env, EzPickle):
 
     ## Episode Termination
     The episode finishes when all the tiles are visited. The car can also go outside the playfield -
-     that is, far off the track, in which case it will receive -100 reward and die.
+     that is, far off the track, in which case it will receive -500 reward and die.
 
     ## Arguments
 
@@ -631,12 +631,12 @@ class CarRacing(gym.Env, EzPickle):
             if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                 terminated = True
                 info["lap_finished"] = False
-                step_reward = -200
+                step_reward = -500
          #killswitch if the car goes off track and the game time has passed 1 sec
         if any(x > 1 for x in self.state) and self.t > 1:
             terminated = True
             info["lap_finished"] = False
-            step_reward = -100
+            step_reward = -500
         if self.render_mode == "human":
             self.render()
         #STATE VALUE IS STORED HERE

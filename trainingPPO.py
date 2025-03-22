@@ -5,33 +5,44 @@ import cv2
 import matplotlib.pyplot as plt
 import os
 from stable_baselines3 import PPO
+import time
 
-
+start_time = time.time() 
 
 # Create environment
-env = gym.make("CarRacing-v3",render_mode = "human")
+env = gym.make("CarRacing-v3")
 # Create PPO model with TensorBoard logging
 model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/ppo_car_racing")
+model.learn(total_timesteps=100000)
+print("Total time taken for training: ", time.time() - start_time)
 rewards_per_episode = []
-num_episodes = 100
+
+
+# Create test environment with human rendering
+test_env = gym.make("CarRacing-v3", render_mode="human")
+num_episodes = 5
+
 for ep in range(num_episodes):
-    obs, _ = env.reset() #resets the enviornment to its initial state and states the simulation
-    #general nature of observtion
-    print(env.observation_space)
-     #Box(0.0, 1.0, (6,), float32)
+    obs, _ = test_env.reset()
+    # print(test_env.observation_space)
     total_reward = 0
     done = False
 
     while not done:
-        action, _ = model.predict(obs) #model is given an observation it preicts based on/Get the policy action from an observation 
-        cv2.imwrite("frame.png", cv2.cvtColor(obs, cv2.COLOR_RGB2BGR))#saves the last frame for debugging purposes
-        obs, reward, done, _, info = env.step(action) #return self.state, step_reward, terminated/bool, truncated, info
-        print(obs) #Printing the 6D array
-        total_reward += reward #tracking the total reward for this episode
+        action, _ = model.predict(obs)
+        cv2.imwrite("frame.png", cv2.cvtColor(obs, cv2.COLOR_RGB2BGR))
+        obs, reward, done, _, info = test_env.step(action)
+        # print(obs)
+        total_reward += reward
 
-    rewards_per_episode.append(total_reward) #totals teh rewards 
+    rewards_per_episode.append(total_reward)
     print(f"Episode {ep+1}: Reward = {total_reward}")
 
+# Close test environment when finished
+test_env.close()
+
+
+print("Total time taken for test+train: ", time.time() - start_time)
 # Save rewards with unique filename
 filename = "ppo_rewards.csv"
 if os.path.exists(filename):
@@ -58,4 +69,6 @@ plt.show()
 # Save Model
 model.save("ppo_car_racing")
 env.close()
+
+
 
