@@ -13,7 +13,7 @@ start_time = time.time()
 env = gym.make("CarRacing-v3")
 # Create PPO model with TensorBoard logging
 model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/ppo_car_racing")
-model.learn(total_timesteps=100000)
+model.learn(total_timesteps=500)
 print("Total time taken for training: ", time.time() - start_time)
 rewards_per_episode = []
 

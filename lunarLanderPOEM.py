@@ -13,7 +13,7 @@ env = gym.make("LunarLander-v3")
 
 # Create PPO model with TensorBoard logging (update the log directory as needed)
 model = POEM("MlpPolicy", env, verbose=1, tensorboard_log="logs/poem_lunar_lander")
-model.learn(total_timesteps=50000)
+model.learn(total_timesteps=70000)
 
 rewards_per_episode = []
 num_episodes = 5

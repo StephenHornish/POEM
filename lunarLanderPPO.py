@@ -12,7 +12,7 @@ env = gym.make("LunarLander-v3")
 
 # Create PPO model with TensorBoard logging (update the log directory as needed)
 model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/PPO_lunar_lander")
-model.learn(total_timesteps=50000)
+model.learn(total_timesteps=70000)
 rewards_per_episode = []
 num_episodes = 10
 
@@ -22,7 +22,7 @@ test_env = gym.make("LunarLander-v3", render_mode="human")
 for ep in range(num_episodes):
     ep_start = time.time()
     obs, _ = test_env.reset()  # Reset environment to initial state
-    print("Observation space:", test_env.observation_space)
+    # print("Observation space:", test_env.observation_space)
     # Expected observation space: Box(-array([...]), array([...]), (8,), float32)
     
     total_reward = 0

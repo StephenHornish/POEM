@@ -7,17 +7,20 @@ from stable_baselines3.common.utils import explained_variance
 from gym import spaces  
 
 class POEM(PPO):
-    def __init__(self, *args, kl_threshold=0.1, sigma_min=0.01, sigma_max=0.1, beta=0.9, lambda_diversity=0.1, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.kl_threshold = kl_threshold      # Threshold for triggering mutations
-        self.sigma_min = sigma_min            # Minimum mutation variance
-        self.sigma_max = sigma_max            # Maximum mutation variance
-        self.beta = beta                      # Moving average update rate
-        self.lambda_diversity = lambda_diversity  # Weight for diversity bonus
-        self.theta_avg = copy.deepcopy(self.policy.state_dict())  # Moving average of policy parameters
-        
-        # Store policy_kwargs if not already available.
+    def __init__(self, *args, kl_threshold=0.1, sigma_min=0.01, sigma_max=0.1, 
+                 beta=0.9, lambda_diversity=0.1, **kwargs):
+        self.kl_threshold = kl_threshold      
+        self.sigma_min = sigma_min            
+        self.sigma_max = sigma_max            
+        self.beta = beta                      
+        self.lambda_diversity = lambda_diversity  
         self.policy_kwargs = kwargs.get("policy_kwargs", {})
+        self.theta_avg = None  # Will be set in _setup_model
+        super().__init__(*args, **kwargs)
+    def _setup_model(self):
+        super()._setup_model()
+        # Now that self.policy exists, initialize theta_avg
+        self.theta_avg = copy.deepcopy(self.policy.state_dict())
 
     def compute_loss(self, policy):
         # Retrieve one batch of data from the rollout buffer
