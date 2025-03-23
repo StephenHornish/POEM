@@ -1,6 +1,6 @@
 # Reinforcement Learning with Car Racing Environment
 
-This repository contains code for training a reinforcement learning agent using the Car Racing environment from Gymnasium (formerly OpenAI Gym). It uses Proximal Policy Optimization (PPO) from Stable Baselines3 for training the agent.
+This repository contains code for training a reinforcement learning agent using the Car Racing environment from Gymnasium (formerly OpenAI Gym). It uses Proximal Policy Optimization (PPO) from Stable Baselines3 for training the agent. PPO is compared to POEM, our adaptation to PPO.
 
 ## Installation Guide
 
@@ -48,10 +48,21 @@ This repository contains code for training a reinforcement learning agent using 
   python car_racing.py
   ```
 
-- To train the RL agent using PPO:
+- To train the RL agents specify the model and set TRAIN to True. To evealuate an existing model, set the path and TRAIN to False:
   ```bash
-  python trainingPPO.py
+  python training.py
   ```
+
+- To tune hyperparameters for POEM and PPO
+```bash
+  python tuning.py
+  ```
+
+- To review results of tuning hyperparameters
+```bash
+  python tuning_review.py
+  ```
+
 
 ### 5. Important: Environment File Replacement
 
@@ -70,9 +81,9 @@ The training algorithm relies on a modified version of the Car Racing environmen
 
 For a tutorial on setting up project (https://www.youtube.com/watch?v=gMgj4pSHLww&ab_channel=JohnnyCode)
 
-## License
+<!-- ## License -->
 
-[Your license information here]
+
 
 ## Acknowledgements
 

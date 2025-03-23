@@ -7,7 +7,7 @@ import torch
 from stable_baselines3 import PPO
 from poem_model import POEM  
 
-MODEL_NAME = "POEM" 
+MODEL_NAME = "PPO"  
 
 param_grid = {
     "learning_rate": [3e-4, 1e-4],
@@ -15,6 +15,14 @@ param_grid = {
     "sigma_max": [0.1, 0.2],
     "lambda_diversity": [0.1, 0.2],
 }
+
+if MODEL_NAME == "PPO":
+    param_grid = {
+        "learning_rate": [3e-4, 1e-4],
+        "sigma_min": [0], # not used in PPO
+        "sigma_max": [0], # not used in PPO
+        "lambda_diversity": [0.1, 0.2],
+    }
 
 # Create a list of (param_dict) for each combination
 keys = list(param_grid.keys())
@@ -32,8 +40,8 @@ LONG_TRAINING_TIMESTEPS = 500000
 LONG_TRAINING_EVAL_EPISODES = 10
 
 # Logging directories
-GRIDSEARCH_LOG_DIR = "gridsearch_short_runs"
-FINAL_LOG_DIR = "final_best_run"
+GRIDSEARCH_LOG_DIR = MODEL_NAME+"_gridsearch_short_runs"
+FINAL_LOG_DIR = MODEL_NAME+"_final_best_run"
 
 def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     """
@@ -48,18 +56,34 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     # 1) Create environment (headless/no-render)
     env = gym.make("CarRacing-v3")
 
-    # 2) Instantiate Model
     model = POEM(
         "MlpPolicy",
         env,
         verbose=1,
         learning_rate=params["learning_rate"],
-        kl_threshold=0.1,  # example default; change if you want
+        kl_threshold=0.1,  
         sigma_min=params["sigma_min"],
         sigma_max=params["sigma_max"],
         lambda_diversity=params["lambda_diversity"],
         tensorboard_log=tensorboard_dir,
     )
+
+    # 2) Instantiate Model
+    if MODEL_NAME == "PPO":
+        model = PPO(
+            "MlpPolicy",     
+            env,
+            verbose=1,
+            learning_rate=params["learning_rate"],
+            ent_coef=params["lambda_diversity"],  # mapping POEM's lambda_diversity to PPO's entropy coefficient
+            # n_steps=2048,          
+            # batch_size=64,
+            # n_epochs=10,
+            gamma=0.99,
+            gae_lambda=0.95,
+            clip_range=0.2,
+        )
+            
 
     # 3) Train short-run or long-run
     start_time = time.time()
