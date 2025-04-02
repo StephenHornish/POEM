@@ -164,7 +164,7 @@ def total_action(action, action_tracker):
 def plot_trained_model(rewards,average_action_space,ep_step_rewards):
     # Plot and save training performance
     plt.plot(rewards)
-    plt.title(f"{MODEL_TYPE} Training Performance")
+    plt.title(f" {MODEL_TYPE} - Training Performance {gym_environment}")
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
     plt.savefig(os.path.join(FINAL_LOG_DIR, "training_performance.png"))
@@ -181,7 +181,7 @@ def plot_trained_model(rewards,average_action_space,ep_step_rewards):
         labels = [f"Action {i}" for i in range(len(average_action_space))]  # fallback
 
     plt.bar(labels, average_action_space)
-    plt.title(f"{gym_environment} - Average Action Usage")
+    plt.title(f"{MODEL_TYPE} - Average Action Usage {gym_environment}")
     plt.ylabel("Total Action Magnitude")
     plt.xlabel("Action")
     plt.tight_layout()
@@ -217,7 +217,7 @@ def plot_trained_model(rewards,average_action_space,ep_step_rewards):
             plt.plot(steps, rewards, label=f"Episode {episode_idx + 1}")
 
 
-    plt.title("Step-wise Reward per Episode")
+    plt.title(f"{MODEL_TYPE} Step-wise Reward per Episode {gym_environment}")
     plt.xlabel("Step")
     plt.ylabel("Cumulative Reward")
     plt.legend()
