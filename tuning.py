@@ -7,21 +7,33 @@ import torch
 from stable_baselines3 import PPO
 from poem_model import POEM  
 
-MODEL_NAME = "PPO"  
+MODEL_NAME = "PPO" 
+gym_environment = "LunarLander-v3" 
+#helper function to create unique names for folder
+def get_unique_dir_name(base_name):
+    """
+    Appends a numeric suffix to base_name until a non-existing directory is found.
+    """
+    if not os.path.exists(base_name):
+        return base_name
+    i = 1
+    while True:
+        new_name = f"{base_name}_{i}"
+        if not os.path.exists(new_name):
+            return new_name
+        i += 1
 
 param_grid = {
     "learning_rate": [3e-4, 1e-4],
     "sigma_min": [0.01, 0.02],
-    "sigma_max": [0.1, 0.2],
-    "lambda_diversity": [0.1, 0.2],
+    "sigma_max": [0.1, 0.20],
+    "lambda_diversity": [0.1, 0.2,0.3],
 }
 
 if MODEL_NAME == "PPO":
     param_grid = {
-        "learning_rate": [3e-4, 1e-4],
-        "sigma_min": [0], # not used in PPO
-        "sigma_max": [0], # not used in PPO
-        "lambda_diversity": [0.1, 0.2],
+        "learning_rate": [3e-4, 2e-4,1e-4,9e-5,7e-5,5e-5],
+        "clip_range": [0.1,0.2,0.3,0.4,],
     }
 
 # Create a list of (param_dict) for each combination
@@ -32,16 +44,16 @@ for vals in itertools.product(*(param_grid[k] for k in keys)):
     param_combos.append(combo)
 
 
-GRIDSEARCH_TIMESTEPS = 50000   # short training run for each combo
+GRIDSEARCH_TIMESTEPS = 35000   # short training run for each combo
 GRIDSEARCH_EVAL_EPISODES = 3    # quick evaluation after short run
 
 # Final training once best combo is found
-LONG_TRAINING_TIMESTEPS = 500000
+LONG_TRAINING_TIMESTEPS = 100000
 LONG_TRAINING_EVAL_EPISODES = 10
 
 # Logging directories
-GRIDSEARCH_LOG_DIR = MODEL_NAME+"_gridsearch_short_runs"
-FINAL_LOG_DIR = MODEL_NAME+"_final_best_run"
+GRIDSEARCH_LOG_DIR = "gridsearch_short_runs"
+FINAL_LOG_DIR = "_final_best_run"
 
 def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     """
@@ -52,21 +64,21 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     """
     os.makedirs(run_dir, exist_ok=True)
     tensorboard_dir = os.path.join(run_dir, "tensorboard")
-    
+    model = None
     # 1) Create environment (headless/no-render)
-    env = gym.make("CarRacing-v3")
-
-    model = POEM(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        learning_rate=params["learning_rate"],
-        kl_threshold=0.1,  
-        sigma_min=params["sigma_min"],
-        sigma_max=params["sigma_max"],
-        lambda_diversity=params["lambda_diversity"],
-        tensorboard_log=tensorboard_dir,
-    )
+    env = gym.make(gym_environment)
+    if MODEL_NAME == "POEM":
+        model = POEM(
+            "MlpPolicy",
+            env,
+            verbose=1,
+            learning_rate=params["learning_rate"],
+            kl_threshold=0.1,  
+            sigma_min=params["sigma_min"],
+            sigma_max=params["sigma_max"],
+            lambda_diversity=params["lambda_diversity"],
+            tensorboard_log=tensorboard_dir,
+        )
 
     # 2) Instantiate Model
     if MODEL_NAME == "PPO":
@@ -75,14 +87,14 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
             env,
             verbose=1,
             learning_rate=params["learning_rate"],
-            ent_coef=params["lambda_diversity"],  # mapping POEM's lambda_diversity to PPO's entropy coefficient
-            # n_steps=2048,          
-            # batch_size=64,
-            # n_epochs=10,
-            gamma=0.99,
-            gae_lambda=0.95,
-            clip_range=0.2,
+            #ent_coef=params["lambda_diversity"],
+            #gamma=params["gamma"],
+            #gae_lambda=params["gae_lambda"],
+            clip_range=params["clip_range"],
         )
+    if(model == None):
+        raise ValueError("Model was not created properly (got None). Check your MODEL_NAME or hyperparameters.")
+
             
 
     # 3) Train short-run or long-run
@@ -95,7 +107,7 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     model.save(model_path)
 
     # 5) Evaluate
-    eval_env = gym.make("CarRacing-v3")
+    eval_env = gym.make(gym_environment)
     rewards = []
     for _ in range(eval_episodes):
         obs, _ = eval_env.reset()
