@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 GRIDSEARCH_LOG_DIR = "gridsearch_short_runs"  # or whatever you used
-FINAL_LOG_DIR = "PPO_final_best_run"
+FINAL_LOG_DIR = "POEM_final_best_run"
 
 def summarize_gridsearch_results():
     results = []

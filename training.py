@@ -5,6 +5,7 @@ import gymnasium as gym
 import torch
 import csv
 import matplotlib.pyplot as plt
+import random
 
 # -----------------------------------------------------------------------------
 # Specify which model to use: "POEM" or "PPO"
@@ -35,10 +36,10 @@ else:
 # These will be used for training
 best_params = {
     "POEM": {
-        "learning_rate": 0.0003,
-        "sigma_min": 0.01,
+        "learning_rate": 0.0001,
+        "sigma_min": 0.02,
         "sigma_max": 0.1,
-        "lambda_diversity": 0.1
+        "lambda_diversity": 0.3
     },
     "PPO": {
         "learning_rate": 0.0003,
@@ -59,11 +60,11 @@ os.makedirs(FINAL_LOG_DIR, exist_ok=True)
 if(gym_environment == "CarRacing-v3"):
     LONG_TRAINING_TIMESTEPS = 500000 #500,000 seems to be drivable
 elif(gym_environment == "LunarLander-v3"):
-    LONG_TRAINING_TIMESTEPS = 70000 
+    LONG_TRAINING_TIMESTEPS = 200000 
 else:
     raise ValueError("Gym Enviornment not valid need to set up'.")
 
-LONG_TRAINING_EVAL_EPISODES = 10
+LONG_TRAINING_EVAL_EPISODES = 50
 
 class ActionFilter:
     def __init__(self,alpha=0.01):
@@ -81,7 +82,7 @@ class ActionFilter:
 # -----------------------------------------------------------------------------
 def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     os.makedirs(run_dir, exist_ok=True)
-    env = gym.make(gym_environment,render_mode = "human")
+    env = gym.make(gym_environment)
     
     # Instantiate model with model-specific parameters
     if MODEL_TYPE == "POEM":
@@ -117,8 +118,8 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     model_path = os.path.join(run_dir, "model.zip")
     model.save(model_path)
     
-    # Evaluate the trained model
-    eval_env = gym.make(gym_environment, render_mode="human")
+    # Evaluate the trained model render_mode="human"
+    eval_env = gym.make(gym_environment)
     rewards = []
     #smoother = ActionFilter( alpha=0.2)
     
@@ -232,19 +233,25 @@ def plot_trained_model(rewards,average_action_space,ep_step_rewards):
 # Load and evaluate function
 # -----------------------------------------------------------------------------
 def load_and_evaluate(model_path, eval_episodes):
-    eval_env = gym.make(gym_environment, render_mode="human")
+    eval_env = gym.make(gym_environment)
     
     if MODEL_TYPE == "POEM":
         model = POEM.load(model_path, env=eval_env)
     elif MODEL_TYPE == "PPO":
         model = PPO.load(model_path, env=eval_env)
-        
+    seed = 1
+    eval_env.action_space.seed(seed)
+    eval_env.observation_space.seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     rewards = []
     ep_step_rewards = [] 
     ep_action_space = []
     #smoother = ActionFilter( alpha=0.2)
     for _ in range(eval_episodes):
-        obs, _ = eval_env.reset()
+        obs, _ = eval_env.reset(seed=seed)
+        seed += 1
         done = False
         ep_reward = 0.0
         step = 0
@@ -257,7 +264,7 @@ def load_and_evaluate(model_path, eval_episodes):
             action_space = total_action(action,action_space)
             ep_reward += reward
             step_rewards.append((step, ep_reward)) 
-            step = step + 1
+            step += 1
         ep_action_space.append(action_space)
         ep_step_rewards.append(step_rewards)
         rewards.append(ep_reward)

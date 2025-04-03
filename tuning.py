@@ -7,7 +7,7 @@ import torch
 from stable_baselines3 import PPO
 from poem_model import POEM  
 
-MODEL_NAME = "PPO" 
+MODEL_NAME = "POEM" 
 gym_environment = "LunarLander-v3" 
 #helper function to create unique names for folder
 def get_unique_dir_name(base_name):
@@ -24,9 +24,9 @@ def get_unique_dir_name(base_name):
         i += 1
 
 param_grid = {
-    "learning_rate": [3e-4, 1e-4],
+    "learning_rate": [ 3e-4, 6e-4, 1e-4],
     "sigma_min": [0.01, 0.02],
-    "sigma_max": [0.1, 0.20],
+    "sigma_max": [0.1, 0.2],
     "lambda_diversity": [0.1, 0.2,0.3],
 }
 
