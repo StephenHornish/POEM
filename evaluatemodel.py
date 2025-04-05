@@ -9,13 +9,14 @@ import random
 import pandas as pd
 from stable_baselines3 import PPO
 from poem_model import POEM
+import argparse
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
 #if you want to only evalute one remove the other 
 MODEL_DIRS = {
-    #"PPO": "ppo_tuned_run_lander",
+    "PPO": "ppo_tuned_run_car",
     "POEM": "poem_tuned_run_car"
 }
 #RESULTS_BASE_DIR = "lander_results"
@@ -23,6 +24,7 @@ RESULTS_BASE_DIR = "car_results"
 #gym_environment = "LunarLander-v3"
 gym_environment = "CarRacing-v3"
 LONG_TRAINING_EVAL_EPISODES = 5
+r_m= None
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -92,7 +94,7 @@ def plot_trained_model(rewards, average_action_space, ep_step_rewards, model_typ
     plt.close()
 
 def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
-    eval_env = gym.make(gym_environment, render_mode="human")
+    eval_env = gym.make(gym_environment, render_mode = r_m)
 
     if model_type == "POEM":
         model = POEM.load(model_path, env=eval_env)
@@ -155,13 +157,39 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
     print(f"Avg eval reward for {model_type}: {np.mean(rewards):.2f}")
     return rewards, average_action_space
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Evaluate PPO/POEM models")
+    parser.add_argument("--env", choices=["lander", "car"], required=True,
+                        help="Which environment to evaluate: 'lander' or 'car'")
+    parser.add_argument("-r", "--human", action="store_true",
+                        help="Use human render mode for visualization")
+    return parser.parse_args()
 # -----------------------------------------------------------------------------
 # Main: Evaluate both models and compare
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
+    args = parse_args()
+    print(f"Running eval on {args.env} with render_mode={r_m}")
+    r_m = "human" if args.human else None
+    if args.env == "lander": 
+        RESULTS_BASE_DIR = "lander_results"
+        gym_environment = "LunarLander-v3"
+        MODEL_DIRS = {
+            "PPO": "ppo_tuned_run_lander",
+            "POEM": "poem_tuned_run_lander"
+        }
+    elif args.env == "car":
+        RESULTS_BASE_DIR = "car_results"
+        gym_environment = "CarRacing-v3"
+        MODEL_DIRS = {
+            "PPO": "ppo_tuned_run_car",
+            "POEM": "poem_tuned_run_car"
+        }
+
     os.makedirs(RESULTS_BASE_DIR, exist_ok=True)
     all_rewards = {}
     all_actions = {}
+
 
     for model_type, model_dir in MODEL_DIRS.items():
         print(f"\n--- Evaluating {model_type} ---")
@@ -198,12 +226,16 @@ if __name__ == "__main__":
     plt.ylabel("Total Reward")
     plt.legend()
     plt.grid(True, axis='y')
+    plt.xticks(episodes, [str(i + 1) for i in episodes])
     plt.tight_layout()
     plt.savefig(os.path.join(RESULTS_BASE_DIR, "comparison_total_reward_bar.png"))
     plt.close()
 
     # Average action usage comparison
-    labels = ["DO NOTHING", "FIRE LEFT", "FIRE MAIN", "FIRE RIGHT"]
+    if(gym_environment == "CarRacing-v3"):
+        labels = ["LEFT", "RIGHT", "GAS", "BRAKE"]
+    else:
+        labels = ["DO NOTHING", "FIRE LEFT", "FIRE MAIN", "FIRE RIGHT"]
     x = np.arange(len(labels))  # [0, 1, 2, 3]
     width = 0.35
 

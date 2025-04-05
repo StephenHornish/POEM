@@ -13,7 +13,7 @@ LEARNING_RATE = 0.0001
 ENTROPY_COEF = 0.1  # mapped from lambda_diversity
 
 TRAIN = True  # Set to True to train a new model
-LOG_DIR = "PPO_tuned_run_car"
+LOG_DIR = "ppo_tuned_run_car"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 TIMESTEPS = 500_000
