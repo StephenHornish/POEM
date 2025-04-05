@@ -243,7 +243,7 @@ if __name__ == "__main__":
         offset = (i - num_models / 2) * bar_width + bar_width / 2
         plt.bar(episodes + offset, rewards, width=bar_width, label=model_type)
 
-    plt.title("Comparison: Total Reward per Episode")
+    plt.title(f"{model_type} - Total Reward per Episode {gym_environment}")
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
     plt.legend()
@@ -267,7 +267,7 @@ if __name__ == "__main__":
     plt.bar(x - width/2, all_actions["PPO"], width, label="PPO")
     plt.bar(x + width/2, all_actions["POEM"], width, label="POEM")
 
-    plt.title("Comparison: Action Usage")
+    plt.title(f"{model_type} - Action Usage {gym_environment}")
     plt.xlabel("Action")
     plt.ylabel("Frequency of Action")
     plt.xticks(x, labels)

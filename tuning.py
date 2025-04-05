@@ -101,11 +101,15 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
         obs, _ = eval_env.reset()
         done = False
         ep_reward = 0.0
+        step = 0 
         while not done:
+            if step >= 1000:
+                break
             with torch.no_grad():
                 action, _ = model.predict(obs)
             obs, reward, done, _, _ = eval_env.step(action)
             ep_reward += reward
+            step+=1
         rewards.append(ep_reward)
     eval_env.close()
     

@@ -41,9 +41,9 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
     model_path = os.path.join(run_dir, "model.zip")
     model.save(model_path)
 
-    #avg_reward = evaluate_model(model, eval_episodes, run_dir)
-    #print(f"Trained {timesteps} steps in {train_time:.2f}s, avg eval reward={avg_reward:.2f}")
-    #return avg_reward
+    avg_reward = evaluate_model(model, eval_episodes, run_dir)
+    print(f"Trained {timesteps} steps in {train_time:.2f}s, avg eval reward={avg_reward:.2f}")
+    return avg_reward
 
 # ---------------------------------------------------------------------
 # Evaluation function
@@ -57,12 +57,15 @@ def evaluate_model(model, eval_episodes, save_dir):
         obs, _ = eval_env.reset()
         total_reward = 0
         done = False
-
+        step = 0
         while not done:
+            if step >= 800:
+                break
             with torch.no_grad():
                 action, _ = model.predict(obs)
             obs, reward, done, _, _ = eval_env.step(action)
             total_reward += reward
+            step +=1
 
         rewards.append(total_reward)
         print(f"Episode {ep+1}: Reward = {total_reward:.2f}")
