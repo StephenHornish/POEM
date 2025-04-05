@@ -1,73 +1,112 @@
-import gymnasium as gym
-import numpy as np
-import matplotlib.pyplot as plt
 import os
-from stable_baselines3 import PPO
-from poem_model import POEM
 import time
+import numpy as np
+import gymnasium as gym
+import torch
+import matplotlib.pyplot as plt
+from poem_model import POEM
 
-s = time.time()
+# ---------------------------------------------------------------------
+# POEM Configuration
+# ---------------------------------------------------------------------
+LEARNING_RATE = 0.0003
+SIGMA_MIN = 0.01
+SIGMA_MAX = 0.1
+LAMBDA_DIVERSITY = 0.1
 
-# Create environment - note: render_mode can be set to "human" if you want to see a visual display.
-env = gym.make("LunarLander-v3")
+TRAIN = True  # Set to False to only evaluate a saved model
+LOG_DIR = "poem_tuned_run_lunar"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-# Create PPO model with TensorBoard logging (update the log directory as needed)
-model = POEM("MlpPolicy", env, verbose=1, tensorboard_log="logs/poem_lunar_lander")
-model.learn(total_timesteps=70000)
+TIMESTEPS = 70000
+EVAL_EPISODES = 5
 
-rewards_per_episode = []
-num_episodes = 5
+# ---------------------------------------------------------------------
+# Training and evaluation
+# ---------------------------------------------------------------------
+def train_and_evaluate(timesteps, eval_episodes, run_dir):
+    env = gym.make("LunarLander-v3")
 
-# Create test environment with human rendering
-test_env = gym.make("LunarLander-v3", render_mode="human")
+    model = POEM(
+        "MlpPolicy",
+        env,
+        verbose=1,
+        learning_rate=LEARNING_RATE,
+        kl_threshold=0.1,
+        sigma_min=SIGMA_MIN,
+        sigma_max=SIGMA_MAX,
+        lambda_diversity=LAMBDA_DIVERSITY,
+        tensorboard_log=os.path.join(run_dir, "tensorboard"),
+    )
 
-for ep in range(num_episodes):
-    ep_start = time.time()
-    obs, _ = test_env.reset()  # Reset environment to initial state
-    print("Observation space:", test_env.observation_space)
-    # Expected observation space: Box(-array([...]), array([...]), (8,), float32)
-    
-    total_reward = 0
-    done = False
+    start_time = time.time()
+    model.learn(total_timesteps=timesteps)
+    train_time = time.time() - start_time
 
-    while not done:
-        # Get the action from the model's policy
-        action, _ = model.predict(obs)
-        
-        # Step the environment using the chosen action
-        obs, reward, done, _, info = test_env.step(action)
-        total_reward += reward
+    model_path = os.path.join(run_dir, "model.zip")
+    model.save(model_path)
 
-    rewards_per_episode.append(total_reward)
-    print(f"Episode {ep+1}: Reward = {total_reward}")
-    ep_end = time.time()
-    print(f"Episode {ep+1} Time: {ep_end - ep_start:.2f} seconds")
+    avg_reward = evaluate_model(model, eval_episodes, run_dir)
+    print(f"Trained {timesteps} steps in {train_time:.2f}s, avg eval reward={avg_reward:.2f}")
+    return avg_reward
 
-# Close test environment
-test_env.close()
+# ---------------------------------------------------------------------
+# Evaluation function
+# ---------------------------------------------------------------------
+def evaluate_model(model, eval_episodes, save_dir):
+    eval_env = gym.make("LunarLander-v3", render_mode="human")
+    rewards = []
 
-# Save rewards with a unique filename
-filename = "Luna_poem_rewards.csv"
-if os.path.exists(filename):
-    base, ext = os.path.splitext(filename)
-    counter = 1
-    new_filename = f"{base}_{counter}{ext}"
-    while os.path.exists(new_filename):
-        counter += 1
-        new_filename = f"{base}_{counter}{ext}"
-    filename = new_filename
+    for ep in range(eval_episodes):
+        ep_start = time.time()
+        obs, _ = eval_env.reset()
+        total_reward = 0
+        done = False
 
-print("Total time taken for training:", time.time() - s)
-np.savetxt(filename, rewards_per_episode, delimiter=",")
-print(f"Saved rewards to {filename}")
+        while not done:
+            with torch.no_grad():
+                action, _ = model.predict(obs)
+            obs, reward, done, _, _ = eval_env.step(action)
+            total_reward += reward
 
-# Plot Training Performance
-plt.plot(rewards_per_episode)
-plt.xlabel("Episode")
-plt.ylabel("Total Reward")
-plt.title("POEM LunarLander Training Performance")
-plt.show()
+        rewards.append(total_reward)
+        print(f"Episode {ep+1}: Reward = {total_reward:.2f}")
+        print(f"Episode {ep+1} Time: {time.time() - ep_start:.2f} seconds")
 
-# Save Model
-model.save("poem_lunar_lander")
-env.close()
+    eval_env.close()
+
+    # Save rewards
+    reward_csv = os.path.join(save_dir, "eval_rewards.csv")
+    np.savetxt(reward_csv, rewards, delimiter=",")
+    print(f"Saved episode rewards to {reward_csv}")
+
+    # Plot and save performance
+    plt.plot(rewards)
+    plt.xlabel("Episode")
+    plt.ylabel("Total Reward")
+    plt.title("POEM LunarLander Evaluation")
+    plt.savefig(os.path.join(save_dir, "training_performance.png"))
+    plt.close()
+    print(f"Saved performance plot to {save_dir}/training_performance.png")
+
+    return np.mean(rewards)
+
+# ---------------------------------------------------------------------
+# Load and evaluate a saved model
+# ---------------------------------------------------------------------
+def load_and_evaluate_model(model_path, eval_episodes, run_dir):
+    env = gym.make("LunarLander-v3", render_mode="human")
+    model = POEM.load(model_path, env=env)
+    return evaluate_model(model, eval_episodes, run_dir)
+
+# ---------------------------------------------------------------------
+# Main execution
+# ---------------------------------------------------------------------
+if __name__ == "__main__":
+    if TRAIN:
+        avg = train_and_evaluate(TIMESTEPS, EVAL_EPISODES, LOG_DIR)
+    else:
+        model_path = os.path.join(LOG_DIR, "model.zip")
+        avg = load_and_evaluate_model(model_path, EVAL_EPISODES, LOG_DIR)
+
+    print(f"Final avg reward = {avg:.2f} (see {LOG_DIR}/eval_rewards.csv)")
