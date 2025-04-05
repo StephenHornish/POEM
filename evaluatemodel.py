@@ -15,13 +15,13 @@ from poem_model import POEM
 # -----------------------------------------------------------------------------
 #if you want to only evalute one remove the other 
 MODEL_DIRS = {
-    "PPO": "ppo_tuned_run_lander",
-    "POEM": "poem_tuned_run_lander"
+    #"PPO": "ppo_tuned_run_lander",
+    "POEM": "poem_tuned_run_car"
 }
-RESULTS_BASE_DIR = "lander_results"
-#RESULTS_BASE_DIR = "car_results"
-gym_environment = "LunarLander-v3"
-#gym_environment = "CarRacing-v3"
+#RESULTS_BASE_DIR = "lander_results"
+RESULTS_BASE_DIR = "car_results"
+#gym_environment = "LunarLander-v3"
+gym_environment = "CarRacing-v3"
 LONG_TRAINING_EVAL_EPISODES = 5
 
 # -----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ def plot_trained_model(rewards, average_action_space, ep_step_rewards, model_typ
 
     plt.figure()
     if gym_environment == "CarRacing-v3":
-        labels = ["LEFT", "RIGHT", "BRAKE", "GAS"]
+        labels = ["LEFT", "RIGHT", "GAS", "BRAKE"]
     elif gym_environment == "LunarLander-v3":
         labels = ["DO NOTHING", "FIRE LEFT", "FIRE MAIN", "FIRE RIGHT"]
     else:
