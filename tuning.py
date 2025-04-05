@@ -7,13 +7,13 @@ import torch
 from stable_baselines3 import PPO
 from poem_model import POEM  
 
-MODEL_NAME = "PPO"  
+MODEL_NAME = "POEM"  
 
 param_grid = {
-    "learning_rate": [3e-4, 1e-4],
-    "sigma_min": [0.01, 0.02],
-    "sigma_max": [0.1, 0.2],
-    "lambda_diversity": [0.1, 0.2],
+    "learning_rate": [3e-4, 1e-4, 5e-5],
+    "sigma_min": [0.01, 0.02, 0.04],
+    "sigma_max": [0.1, 0.15, 0.2],
+    "lambda_diversity": [0.0, 0.1, 0.2],
 }
 
 if MODEL_NAME == "PPO":
@@ -32,11 +32,11 @@ for vals in itertools.product(*(param_grid[k] for k in keys)):
     param_combos.append(combo)
 
 
-GRIDSEARCH_TIMESTEPS = 50000   # short training run for each combo
+GRIDSEARCH_TIMESTEPS = 100000   # short training run for each combo
 GRIDSEARCH_EVAL_EPISODES = 3    # quick evaluation after short run
 
 # Final training once best combo is found
-LONG_TRAINING_TIMESTEPS = 500000
+LONG_TRAINING_TIMESTEPS = 200000
 LONG_TRAINING_EVAL_EPISODES = 10
 
 # Logging directories
@@ -54,7 +54,7 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     tensorboard_dir = os.path.join(run_dir, "tensorboard")
     
     # 1) Create environment (headless/no-render)
-    env = gym.make("CarRacing-v3")
+    env = gym.make("LunarLander-v3",continuous=True)
 
     model = POEM(
         "MlpPolicy",
@@ -95,7 +95,7 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     model.save(model_path)
 
     # 5) Evaluate
-    eval_env = gym.make("CarRacing-v3")
+    eval_env = gym.make("LunarLander-v3",continuous=True)
     rewards = []
     for _ in range(eval_episodes):
         obs, _ = eval_env.reset()

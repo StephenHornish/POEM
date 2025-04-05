@@ -16,14 +16,14 @@ TRAIN = True  # Set to False to skip training and evaluate a saved model
 LOG_DIR = "ppo_tuned_run_lander"
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 70000
+TIMESTEPS = 100000
 EVAL_EPISODES = 5
 
 # ---------------------------------------------------------------------
 # Training and evaluation
 # ---------------------------------------------------------------------
 def train_and_evaluate(timesteps, eval_episodes, run_dir):
-    env = gym.make("LunarLander-v3")
+    env = gym.make("LunarLander-v3",continuous=True)
 
     model = PPO(
         "MlpPolicy",
@@ -41,15 +41,15 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
     model_path = os.path.join(run_dir, "model.zip")
     model.save(model_path)
 
-    avg_reward = evaluate_model(model, eval_episodes, run_dir)
-    print(f"Trained {timesteps} steps in {train_time:.2f}s, avg eval reward={avg_reward:.2f}")
-    return avg_reward
+    #avg_reward = evaluate_model(model, eval_episodes, run_dir)
+    #print(f"Trained {timesteps} steps in {train_time:.2f}s, avg eval reward={avg_reward:.2f}")
+    #return avg_reward
 
 # ---------------------------------------------------------------------
 # Evaluation function
 # ---------------------------------------------------------------------
 def evaluate_model(model, eval_episodes, save_dir):
-    eval_env = gym.make("LunarLander-v3", render_mode="human")
+    eval_env = gym.make("LunarLander-v3",continuous=True, render_mode="human")
     rewards = []
 
     for ep in range(eval_episodes):
@@ -90,7 +90,7 @@ def evaluate_model(model, eval_episodes, save_dir):
 # Load and evaluate a saved model
 # ---------------------------------------------------------------------
 def load_and_evaluate_model(model_path, eval_episodes, run_dir):
-    env = gym.make("LunarLander-v3", render_mode="human")
+    env = gym.make("LunarLander-v3",continuous=True, render_mode="human")
     model = PPO.load(model_path, env=env)
     return evaluate_model(model, eval_episodes, run_dir)
 

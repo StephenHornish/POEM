@@ -26,6 +26,7 @@ gym_environment = "CarRacing-v3"
 LONG_TRAINING_EVAL_EPISODES = 5
 r_m= None
 
+
 # -----------------------------------------------------------------------------
 # Helper Functions
 # -----------------------------------------------------------------------------
@@ -39,7 +40,23 @@ def total_action(action, action_tracker):
         action_tracker[2] += brake
         action_tracker[3] += gas
     elif gym_environment == "LunarLander-v3":
-        action_tracker[action] += 1
+        main_engine, direction = action
+        # Track lateral boosters (left/right)
+        if direction < -0.5:
+            # Left booster fires
+            throttle = (abs(direction) - 0.5) * 2  # Scale from 0 to 1
+            action_tracker[0] += throttle
+        elif direction > 0.5:
+            # Right booster fires
+            throttle = (direction - 0.5) * 2
+            action_tracker[1] += throttle
+
+        # Track main engine
+        if main_engine >= 0:
+            # Main engine throttle scales from 0.5 to 1.0 => 0 to 1 scaled
+            throttle = 2 * (main_engine - 0.5)
+            throttle = max(throttle, 0.0)  # Avoid negative values
+            action_tracker[2] += throttle
     return action_tracker
 
 def plot_trained_model(rewards, average_action_space, ep_step_rewards, model_type, save_dir):
@@ -94,7 +111,7 @@ def plot_trained_model(rewards, average_action_space, ep_step_rewards, model_typ
     plt.close()
 
 def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
-    eval_env = gym.make(gym_environment, render_mode = r_m)
+    eval_env = gym.make(gym_environment,continuous=True, render_mode = r_m)
 
     if model_type == "POEM":
         model = POEM.load(model_path, env=eval_env)
@@ -111,6 +128,7 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
     rewards = []
     ep_step_rewards = []
     ep_action_space = []
+    ep_start = time.time()
 
     for ep in range(eval_episodes):
         obs, _ = eval_env.reset(seed=seed)
@@ -122,10 +140,14 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
         action_space = [0, 0, 0, 0]
 
         while not done:
+            if(gym_environment == "LunarLander-v3"):
+                if step >= 800:
+                    break
             with torch.no_grad():
                 action, _ = model.predict(obs)
             obs, reward, done, _, _ = eval_env.step(action)
             action_space = total_action(action, action_space)
+            
             ep_reward += reward
             step_rewards.append((step, ep_reward))
             step += 1
@@ -235,7 +257,9 @@ if __name__ == "__main__":
     if(gym_environment == "CarRacing-v3"):
         labels = ["LEFT", "RIGHT", "GAS", "BRAKE"]
     else:
-        labels = ["DO NOTHING", "FIRE LEFT", "FIRE MAIN", "FIRE RIGHT"]
+        labels = ["FIRE LEFT", "FIRE RIGHT","FIRE MAIN", ]
+        for key in all_actions:
+            all_actions[key] = all_actions[key][:3]  
     x = np.arange(len(labels))  # [0, 1, 2, 3]
     width = 0.35
 
