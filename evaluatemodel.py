@@ -23,7 +23,7 @@ MODEL_DIRS = {
 RESULTS_BASE_DIR = "car_results"
 #gym_environment = "LunarLander-v3"
 gym_environment = "CarRacing-v3"
-LONG_TRAINING_EVAL_EPISODES = 5
+LONG_TRAINING_EVAL_EPISODES = 10
 r_m= None
 
 
@@ -141,7 +141,7 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
 
         while not done:
             if(gym_environment == "LunarLander-v3"):
-                if step >= 800:
+                if step >= 600:
                     break
             with torch.no_grad():
                 action, _ = model.predict(obs)

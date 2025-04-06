@@ -11,14 +11,14 @@ from poem_model import POEM
 # ---------------------------------------------------------------------
 LEARNING_RATE = 0.0003
 SIGMA_MIN = 0.04
-SIGMA_MAX = 0.1
+SIGMA_MAX = 0.15
 LAMBDA_DIVERSITY = 0.2
 
 TRAIN = True  # Set to False to only evaluate a saved model
 LOG_DIR = "poem_tuned_run_lander"
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 100000
+TIMESTEPS = 200000
 EVAL_EPISODES = 5
 
 # ---------------------------------------------------------------------
@@ -64,13 +64,10 @@ def evaluate_model(model, eval_episodes, save_dir):
         done = False
         step = 0 
         while not done:
-            if step >= 800:
-                break
             with torch.no_grad():
                 action, _ = model.predict(obs)
             obs, reward, done, _, _ = eval_env.step(action)
             total_reward += reward
-            step +=1
 
         rewards.append(total_reward)
         print(f"Episode {ep+1}: Reward = {total_reward:.2f}")

@@ -7,7 +7,7 @@ import torch
 from stable_baselines3 import PPO
 from poem_model import POEM  
 
-MODEL_NAME = "POEM"  
+MODEL_NAME = "PPO"  
 
 param_grid = {
     "learning_rate": [3e-4, 1e-4, 5e-5],
@@ -18,10 +18,8 @@ param_grid = {
 
 if MODEL_NAME == "PPO":
     param_grid = {
-        "learning_rate": [3e-4, 1e-4],
-        "sigma_min": [0], # not used in PPO
-        "sigma_max": [0], # not used in PPO
-        "lambda_diversity": [0.1, 0.2],
+        "learning_rate": [6e-4,3e-4, 1e-4, 5e-5],
+        "clip_range": [0.25,0.2,0.15, 0.1], 
     }
 
 # Create a list of (param_dict) for each combination
@@ -56,32 +54,27 @@ def train_and_evaluate(params, timesteps, eval_episodes, run_dir):
     # 1) Create environment (headless/no-render)
     env = gym.make("LunarLander-v3",continuous=True)
 
-    model = POEM(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        learning_rate=params["learning_rate"],
-        kl_threshold=0.1,  
-        sigma_min=params["sigma_min"],
-        sigma_max=params["sigma_max"],
-        lambda_diversity=params["lambda_diversity"],
-        tensorboard_log=tensorboard_dir,
-    )
-
-    # 2) Instantiate Model
+    # Instantiate model based on MODEL_NAME
     if MODEL_NAME == "PPO":
         model = PPO(
-            "MlpPolicy",     
+            "MlpPolicy",
             env,
             verbose=1,
             learning_rate=params["learning_rate"],
-            ent_coef=params["lambda_diversity"],  # mapping POEM's lambda_diversity to PPO's entropy coefficient
-            # n_steps=2048,          
-            # batch_size=64,
-            # n_epochs=10,
-            gamma=0.99,
-            gae_lambda=0.95,
-            clip_range=0.2,
+            clip_range=params["clip_range"],
+            tensorboard_log=tensorboard_dir,
+        )
+    else:
+        model = POEM(
+            "MlpPolicy",
+            env,
+            verbose=1,
+            learning_rate=params["learning_rate"],
+            kl_threshold=0.1,  
+            sigma_min=params["sigma_min"],
+            sigma_max=params["sigma_max"],
+            lambda_diversity=params["lambda_diversity"],
+            tensorboard_log=tensorboard_dir,
         )
             
 
