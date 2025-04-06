@@ -3,8 +3,8 @@
 import os
 import numpy as np
 
-GRIDSEARCH_LOG_DIR = "PPO_gridsearch_short_runs"  # or whatever you used
-FINAL_LOG_DIR = "PPO_final_best_run"
+GRIDSEARCH_LOG_DIR = "PPO_gridsearch_long_runs"  # or whatever you used
+FINAL_LOG_DIR = "PPO_final_best_run_long"
 
 def summarize_gridsearch_results():
     results = []

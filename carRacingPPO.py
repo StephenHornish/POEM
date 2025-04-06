@@ -10,14 +10,14 @@ from stable_baselines3 import PPO
 # PPO Configuration
 # ---------------------------------------------------------------------
 LEARNING_RATE = 0.0001
-ENTROPY_COEF = 0.1  # mapped from lambda_diversity
+CLIP_RANGE = 0.1  # mapped from lambda_diversity
 
 TRAIN = True  # Set to True to train a new model
 LOG_DIR = "ppo_tuned_run_car"
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 500_000
-EVAL_EPISODES = 10
+TIMESTEPS = 500000
+EVAL_EPISODES = 1
 
 # ---------------------------------------------------------------------
 # Training and evaluation
@@ -31,7 +31,7 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
         env,
         verbose=1,
         learning_rate=LEARNING_RATE,
-        ent_coef=ENTROPY_COEF,
+        clip_range=CLIP_RANGE,
         tensorboard_log=os.path.join(run_dir, "tensorboard"),
     )
 

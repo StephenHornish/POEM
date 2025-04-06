@@ -9,15 +9,15 @@ from stable_baselines3 import PPO
 # ---------------------------------------------------------------------
 # PPO Configuration
 # ---------------------------------------------------------------------
-LEARNING_RATE = 0.0006
-CLIP_RANGE = 0.25  # entropy regularization for exploration
+LEARNING_RATE = 5e-5
+CLIP_RANGE = 0.1  # entropy regularization for exploration
 
 TRAIN = True  # Set to False to skip training and evaluate a saved model
-LOG_DIR = "ppo_tuned_run_lander"
+LOG_DIR = "ppo_tuned_run_lander_l"
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 200000
-EVAL_EPISODES = 5
+TIMESTEPS = 250000
+EVAL_EPISODES = 1
 
 # ---------------------------------------------------------------------
 # Training and evaluation

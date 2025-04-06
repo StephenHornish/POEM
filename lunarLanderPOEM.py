@@ -9,17 +9,17 @@ from poem_model import POEM
 # ---------------------------------------------------------------------
 # POEM Configuration
 # ---------------------------------------------------------------------
-LEARNING_RATE = 0.0003
-SIGMA_MIN = 0.04
-SIGMA_MAX = 0.15
-LAMBDA_DIVERSITY = 0.2
+LEARNING_RATE = 0.0006
+SIGMA_MIN = 0.06
+SIGMA_MAX = 0.2
+LAMBDA_DIVERSITY = 0.3
 
 TRAIN = True  # Set to False to only evaluate a saved model
 LOG_DIR = "poem_tuned_run_lander"
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 200000
-EVAL_EPISODES = 5
+TIMESTEPS = 250000
+EVAL_EPISODES = 1
 
 # ---------------------------------------------------------------------
 # Training and evaluation

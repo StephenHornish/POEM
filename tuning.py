@@ -10,10 +10,10 @@ from poem_model import POEM
 MODEL_NAME = "PPO"  
 
 param_grid = {
-    "learning_rate": [3e-4, 1e-4, 5e-5],
-    "sigma_min": [0.01, 0.02, 0.04],
-    "sigma_max": [0.1, 0.15, 0.2],
-    "lambda_diversity": [0.0, 0.1, 0.2],
+    "learning_rate": [6e-4,3e-4, 1e-4, 5e-5],
+    "sigma_min": [0.01, 0.02, 0.04,0.06],
+    "sigma_max": [0.1, 0.15, 0.2,0.25],
+    "lambda_diversity": [0.1,0.2,0.3],
 }
 
 if MODEL_NAME == "PPO":
@@ -30,15 +30,15 @@ for vals in itertools.product(*(param_grid[k] for k in keys)):
     param_combos.append(combo)
 
 
-GRIDSEARCH_TIMESTEPS = 100000   # short training run for each combo
+GRIDSEARCH_TIMESTEPS = 250000   # short training run for each combo
 GRIDSEARCH_EVAL_EPISODES = 3    # quick evaluation after short run
 
 # Final training once best combo is found
-LONG_TRAINING_TIMESTEPS = 200000
+LONG_TRAINING_TIMESTEPS = 400000
 LONG_TRAINING_EVAL_EPISODES = 10
 
 # Logging directories
-GRIDSEARCH_LOG_DIR = MODEL_NAME+"_gridsearch_short_runs"
+GRIDSEARCH_LOG_DIR = MODEL_NAME+"_gridsearch_long_runs"
 FINAL_LOG_DIR = MODEL_NAME+"_final_best_run"
 
 def train_and_evaluate(params, timesteps, eval_episodes, run_dir):

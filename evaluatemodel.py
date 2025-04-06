@@ -87,19 +87,12 @@ def plot_trained_model(rewards, average_action_space, ep_step_rewards, model_typ
 
     for episode_idx, step_list in enumerate(ep_step_rewards):
         steps, step_rewards = zip(*step_list)
-        filtered_steps = [steps[0]]
-        filtered_rewards = [step_rewards[0]]
 
-        for i in range(1, len(steps)):
-            diff = step_rewards[i] - step_rewards[i - 1]
-            if diff >= -50:
-                filtered_steps.append(steps[i])
-                filtered_rewards.append(step_rewards[i])
-            else:
-                # Optional: skip or interpolate based on previous value
-                pass
+        # Avoid plotting the final point becuase its a high positive value and throws off chart
+        steps = steps[:-1]
+        step_rewards = step_rewards[:-1]
 
-        plt.plot(filtered_steps, filtered_rewards, label=f"Episode {episode_idx + 1}")
+        plt.plot(steps, step_rewards, label=f"Episode {episode_idx + 1}")
 
     plt.title(f"{model_type} Step-wise Reward per Episode {gym_environment}")
     plt.xlabel("Step")
@@ -118,7 +111,7 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
     else:
         model = PPO.load(model_path, env=eval_env)
 
-    seed = 1
+    seed = 2
     eval_env.action_space.seed(seed)
     eval_env.observation_space.seed(seed)
     random.seed(seed)
