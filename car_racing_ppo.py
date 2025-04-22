@@ -9,8 +9,7 @@ from stable_baselines3 import PPO
 # ---------------------------------------------------------------------
 # PPO Configuration
 # ---------------------------------------------------------------------
-LEARNING_RATE = 0.0001
-CLIP_RANGE = 0.1  # mapped from lambda_diversity
+
 
 TRAIN = True  # Set to True to train a new model
 LOG_DIR = os.path.join("trained_models", "ppo_tuned_run_car")
@@ -24,7 +23,7 @@ EVAL_EPISODES = 1
 # ---------------------------------------------------------------------
 def train_and_evaluate(timesteps, eval_episodes, run_dir):
     os.makedirs(run_dir, exist_ok=True)
-    env = gym.make("CarRacing-v3")
+    env = gym.make("CarRacing-v3",continuous=True)
 
     model = PPO(
         "MlpPolicy",
@@ -32,17 +31,14 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
         verbose=1,
         learning_rate=0.003,
         clip_range=0.1,
-        ent_coef=0.001,
-        gae_lambda=1.0,
-        batch_size=64,
-        n_epochs=24,
-        n_steps=1024,
-        normalize_advantage=True,
-        target_kl=0.03,
-        vf_coef=0.5,
-        policy_kwargs=dict(log_std_init=1),
+        ent_coef=0.01,
+        gae_lambda=0.9,
+        batch_size=128,
+        n_epochs=18,
+        n_steps=512,
+        vf_coef=1,
         tensorboard_log=os.path.join(run_dir, "tensorboard"),
-        device = "cpu",
+        device="cpu",
     )
 
     start_time = time.time()
@@ -60,7 +56,7 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
 # Evaluation function
 # ---------------------------------------------------------------------
 def evaluate_model(model, eval_episodes, save_dir):
-    eval_env = gym.make("CarRacing-v3", render_mode="human")
+    eval_env = gym.make("CarRacing-v3",continuous=True, render_mode="human")
     rewards = []
 
     for _ in range(eval_episodes):
@@ -93,7 +89,7 @@ def evaluate_model(model, eval_episodes, save_dir):
 # Load and evaluate saved model
 # ---------------------------------------------------------------------
 def load_and_evaluate_model(model_path, eval_episodes, run_dir):
-    env = gym.make("CarRacing-v3", render_mode="human")
+    env = gym.make("CarRacing-v3",continuous=True, render_mode="human")
     model = PPO.load(model_path, env=env)
     avg_reward = evaluate_model(model, eval_episodes, run_dir)
     print(f"Final average reward after loading model: {avg_reward:.2f}")

@@ -9,17 +9,13 @@ from poem_model import POEM
 # ---------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------
-LEARNING_RATE = 0.0003
-SIGMA_MIN = 0.01
-SIGMA_MAX = 0.1
-LAMBDA_DIVERSITY = 0.1
 
-TRAIN = True  # Set to True to train a new model
+TRAIN = True # Set to True to train a new model
 LOG_DIR = os.path.join("trained_models", "poem_tuned_run_bipedal")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 400000
-EVAL_EPISODES = 1
+TIMESTEPS = 800000
+EVAL_EPISODES = 10
 
 # ---------------------------------------------------------------------
 # Training and evaluation
@@ -33,22 +29,18 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
         env,
         verbose=1,
         learning_rate=0.003,
-        clip_range=0.2,
-        gae_lambda=1.0,
-        batch_size=256,
-        n_epochs=30,
-        n_steps=512,
-        normalize_advantage=True,
-        target_kl=0.003,
-        ent_coef=0.01,
-        vf_coef=0.5,
-        kl_threshold=0.25,
-        sigma_min=0.01,
-        sigma_max=0.15,
-        beta=0.9,
-        lambda_diversity=0.05,
-        policy_kwargs=dict(log_std_init=1),
-        device = "cpu",
+        clip_range=0.1,
+        gae_lambda=0.9,
+        batch_size=128,
+        n_epochs=9,
+        n_steps=2048,
+        vf_coef=0.7,
+        kl_threshold=0.05,
+        sigma_min=0.03,
+        sigma_max=0.25,
+        beta=1,
+        lambda_diversity=0.25,
+        device="cpu",
     )
 
     start_time = time.time()

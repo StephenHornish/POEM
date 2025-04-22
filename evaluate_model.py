@@ -76,8 +76,8 @@ def plot_trained_model(rewards, average_action_space, ep_step_rewards, model_typ
     plt.figure()
     if gym_environment == "CarRacing-v3":
         labels = ["LEFT", "RIGHT", "GAS", "BRAKE"]
-    elif gym_environment == "LunarLander-v3":
-        labels = ["DO NOTHING", "FIRE LEFT", "FIRE MAIN", "FIRE RIGHT"]
+    elif gym_environment == "MountainCarContinuous-v0":
+        labels = ["FORCE"]
     else:
         labels = [f"Action {i}" for i in range(len(average_action_space))]
 
@@ -140,12 +140,13 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
         ep_reward = 0.0
         step = 0
         step_rewards = []
-        action_space = [0, 0, 0, 0]
+
+        if gym_environment == "MountainCarContinuous-v0":
+            action_space = [0]
+        else:
+            action_space = [0, 0, 0, 0]
 
         while not done:
-            if(gym_environment == "LunarLander-v3"):
-                if step >= 600:
-                    break
             with torch.no_grad():
                 action, _ = model.predict(obs)
             obs, reward, done, _, _ = eval_env.step(action)
@@ -193,8 +194,8 @@ def load_and_evaluate(model_path, eval_episodes, model_type, save_dir):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate PPO/POEM models")
-    parser.add_argument("--env", choices=["lander", "car", "bipedal"], required=True,
-                        help="Which environment to evaluate: 'lander', 'car' or 'bipedal'")
+    parser.add_argument("--env", choices=["lander", "car", "bipedal", "cart"], required=True,
+                        help="Which environment to evaluate: 'lander', 'car', 'bipedal', or 'cart'")
     parser.add_argument("-r", "--human", action="store_true",
                         help="Use human render mode for visualization")
     return parser.parse_args()
@@ -212,7 +213,6 @@ if __name__ == "__main__":
             "PPO": "ppo_tuned_run_lander",
             "POEM": "poem_tuned_run_lander"
         }
-
     elif args.env == "car":
         RESULTS_BASE_DIR = os.path.join("results", "car_results")
         gym_environment = "CarRacing-v3"
@@ -220,13 +220,19 @@ if __name__ == "__main__":
             "PPO": "ppo_tuned_run_car",
             "POEM": "poem_tuned_run_car"
         }
-        
     elif args.env == "bipedal":
         RESULTS_BASE_DIR = os.path.join("results", "bipedal_results")
         gym_environment = "BipedalWalker-v3"
         MODEL_DIRS = {
             "PPO": "ppo_tuned_run_bipedal",
             "POEM": "poem_tuned_run_bipedal"
+        }
+    elif args.env == "cart":
+        RESULTS_BASE_DIR = os.path.join("results", "cart_results")
+        gym_environment = "MountainCarContinuous-v0"
+        MODEL_DIRS = {
+            "PPO": "ppo_tuned_run_cart",
+            "POEM": "poem_tuned_run_cart"
         }
     else:
         raise ValueError(f"Unknown environment {args.env}")

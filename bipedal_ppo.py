@@ -16,8 +16,8 @@ LOG_DIR = os.path.join("trained_models", "ppo_tuned_run_bipedal")
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 400000
-EVAL_EPISODES = 1
+TIMESTEPS = 800000
+EVAL_EPISODES = 10
 
 # ---------------------------------------------------------------------
 # Training and evaluation
@@ -29,19 +29,16 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
         "MlpPolicy",
         env,
         verbose=1,
-        learning_rate=0.003,
-        clip_range=0.1,
+        learning_rate=0.0003,
+        clip_range=0.2,
         ent_coef=0.001,
-        gae_lambda=1.0,
-        batch_size=64,
-        n_epochs=24,
+        gae_lambda=1,
+        batch_size=128,
+        n_epochs=18,
         n_steps=1024,
-        normalize_advantage=True,
-        target_kl=0.03,
         vf_coef=0.5,
-        policy_kwargs=dict(log_std_init=1),
         tensorboard_log=os.path.join(run_dir, "tensorboard"),
-        device = "cpu",
+        device="cpu",
     )
 
     start_time = time.time()

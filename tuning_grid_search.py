@@ -16,10 +16,8 @@ param_grid = {
     "ent_coef": [0, 0.001, 0.001, 0.01],          
     "gae_lambda": [0.9, 1.0],
     "batch_size": [32, 64, 128, 256],
-    "log_std_init": [-1, 0, 1, 2, 3],
     "n_epochs": [3,9,15, 21, 27],
     "n_steps": [512, 1023, 2048],
-    "normalize_advantage": [True, False],
     "target_kl": [0.03, 0.003],
     "vf_coef": [0.5, 1],                         
 }
@@ -32,10 +30,8 @@ if MODEL_NAME == "PPO":
         "ent_coef": [0, 0.001, 0.001, 0.01],          
         "gae_lambda": [0.9, 1.0],
         "batch_size": [32, 64, 128, 256],
-        "log_std_init": [-1, 0, 1, 2, 3],
         "n_epochs": [3,9,15, 21, 27],
         "n_steps": [512, 1023, 2048],
-        "normalize_advantage": [True, False],
         "target_kl": [0.03, 0.003],
         "vf_coef": [0.5, 1],                          
 }

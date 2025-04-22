@@ -1,19 +1,19 @@
 Best Hyperparameters:
 learning_rate: 0.003
-clip_range: 0.2
+clip_range: 0.1
 ent_coef: 0.01
 gae_lambda: 1.0
-batch_size: 256
+batch_size: 512
 log_std_init: 1
-n_epochs: 30
-n_steps: 512
-normalize_advantage: True
+n_epochs: 27
+n_steps: 1024
+normalize_advantage: False
 target_kl: 0.003
 vf_coef: 0.5
-kl_threshold: 0.25
-sigma_min: 0.01
-sigma_max: 0.15
-beta: 0.9
-lambda_diversity: 0.05
+kl_threshold: 0.1
+sigma_min: 0.08
+sigma_max: 0.25
+beta: 0.8
+lambda_diversity: 0.15
 
-Best Value (negative mean reward): 240.7417971243708
+Best Value (negative mean reward): 270.32399908824954

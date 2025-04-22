@@ -12,14 +12,15 @@ import argparse
 # Command-line argument parsing
 parser = argparse.ArgumentParser(description="Optuna Hyperparameter Tuning")
 #
-#python tuning_HPO.py --model poem --env lander --trials 150 --timestep100000
+#python tuning_HPO.py --model poem --env lander --trials 150 --timestep 100000
 #
 parser.add_argument('--model', type=str, required=True, help="Model type: 'ppo' or 'poem'")
 parser.add_argument('--trials', type=int, default=200, help="Number of Optuna trials")
-parser.add_argument('--env', type=str, required=True, help="Environment: 'car' or 'lander'")
+parser.add_argument('--env', type=str, required=True, help="Environment: 'car' , 'lander','bipedal', or 'cart' ")
 parser.add_argument('--timestep', type=int, default=100000, help="Total training timesteps (default: 100000)")
 device = "cpu"
 print(f"Using device: {device}")
+
 
 
 args = parser.parse_args()
@@ -36,7 +37,9 @@ valid_models = {
 
 valid_envs = {
     "car": "CarRacing-v3",
-    "lander": "LunarLander-v3"
+    "lander": "LunarLander-v3",
+    "bipedal":"BipedalWalker-v3",
+    "cart":"MountainCarContinuous-v0"
 }
 
 # Normalize to lowercase
@@ -64,18 +67,16 @@ TIMESTEP = args.timestep
 SAVE_DIR = "optuna_"
 
 
+
 param_grid = {
     "learning_rate": [0.000003, 0.00003, 0.0003, 0.003],
     "clip_range": [0.1, 0.2, 0.3],
-    "ent_coef": [0, 0.001, 0.001, 0.01],          
+    "ent_coef": [0, 0.001, 0.01],          
     "gae_lambda": [0.9, 1.0],
-    "batch_size": [32, 64, 128, 256,512],
-    "log_std_init": [-1, 0, 1, 2, 3],
-    "n_epochs": [3,6,9,12,15,18,21,24,27,30],
-    "n_steps": [512,1024,2048,4096],
-    "normalize_advantage": [True, False],
-    "target_kl": [0.03, 0.003],
-    "vf_coef": [0.5, 1],
+    "batch_size": [32, 64, 128, 256],
+    "n_epochs": [3,6,9,12,15,18],
+    "n_steps": [256,512,1024,2048],
+    "vf_coef": [0.5,0.7, 1],
 
     #ONLY FOR POEM
     "kl_threshold": [0.025,0.05,0.075,0.1,0.15,0.2,0.25],    
@@ -87,15 +88,14 @@ param_grid = {
 
 def optimize(trial):
     #  creating sample parameter
+    
     params = {
         key: trial.suggest_categorical(key, param_grid[key])
         for key in [
             "learning_rate", "clip_range", "ent_coef", "gae_lambda", "batch_size",
-            "log_std_init", "n_epochs", "n_steps", "normalize_advantage",
-            "target_kl", "vf_coef"
+             "n_epochs", "n_steps",  "vf_coef"
         ]
     }
-
     # If POEM, add extra parameters
     if MODEL_NAME == "POEM":
         params.update({
@@ -106,8 +106,10 @@ def optimize(trial):
             ]
         })
 
-    
-    env = gym.make(ENV, continuous=True)
+    if(ENV == "BipedalWalker-v3" or ENV == "MountainCarContinuous-v0" ):
+        env = gym.make(ENV)
+    else:
+        env = gym.make(ENV, continuous=True)
 
     if MODEL_NAME == "PPO":
         model = PPO(
@@ -120,11 +122,8 @@ def optimize(trial):
             batch_size=params["batch_size"],
             n_epochs=params["n_epochs"],
             n_steps=params["n_steps"],
-            normalize_advantage=params["normalize_advantage"],
-            target_kl=params["target_kl"],
             ent_coef=params["ent_coef"],     
             vf_coef=params["vf_coef"],           
-            policy_kwargs=dict(log_std_init=params["log_std_init"]),
             device = device,
         )
     else:
@@ -138,8 +137,6 @@ def optimize(trial):
             batch_size=params["batch_size"],
             n_epochs=params["n_epochs"],
             n_steps=params["n_steps"],
-            normalize_advantage=params["normalize_advantage"],
-            target_kl=params["target_kl"],
             ent_coef=params["ent_coef"],         
             vf_coef=params["vf_coef"],
             kl_threshold = params["kl_threshold"],        
@@ -147,38 +144,34 @@ def optimize(trial):
             sigma_max = params["sigma_max"],              
             beta = params["beta"],                     
             lambda_diversity = params["lambda_diversity"],          
-            policy_kwargs=dict(log_std_init=params["log_std_init"]),
             device = device,
         )
 
-    n_chunks = 3  # You can adjust this (e.g., 5 chunks of training)
+    try:
+        model.learn(total_timesteps=TIMESTEP)
+    except ValueError as e:
+        if "nan" in str(e).lower():
+            raise optuna.TrialPruned()
+        else:
+            raise e
 
-    for i in range(n_chunks):
-        model.learn(total_timesteps=TIMESTEP // n_chunks)
-
-        mean_reward = evaluate(model, env)
-
-        # Report intermediate result to Optuna
-        trial.report(mean_reward, step=i)
-
-        # Check if should prune
-        if trial.should_prune():
-            raise optuna.exceptions.TrialPruned()
-
-    # Final evaluation after all trainingover the full time
     final_mean_reward = evaluate(model, env)
-    return final_mean_reward  # Optuna minimizes
+    return final_mean_reward  #optuna set to maximize reward 
 
-def evaluate(model, env, n_episodes=5):
+
+def evaluate(model, env, n_episodes=4):
+    max_steps = env.spec.max_episode_steps
     rewards = []
     for _ in range(n_episodes):
         done = False
         obs, _ = env.reset()
         total_reward = 0
-        while not done:
+        steps = 0
+        while not done and steps < max_steps:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, _, _ = env.step(action)
             total_reward += reward
+            steps += 1 
         rewards.append(total_reward)
     return sum(rewards) / len(rewards)
 
@@ -194,7 +187,7 @@ if __name__ == "__main__":
         f.write("Best Hyperparameters:\n")
         for key, value in study.best_params.items():
             f.write(f"{key}: {value}\n")
-        f.write(f"\nBest Value (negative mean reward): {study.best_value}\n")
+        f.write(f"\nBest Value (mean reward): {study.best_value}\n")
 
     joblib.dump(study, os.path.join(SAVE_PATH, "optuna_tuning.pkl"))
 

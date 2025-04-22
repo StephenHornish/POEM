@@ -10,6 +10,7 @@ from gymnasium import spaces
 from gymnasium.envs.box2d.car_dynamics import Car
 from gymnasium.error import DependencyNotInstalled, InvalidAction
 from gymnasium.utils import EzPickle
+from collections import deque
 
 
 try:
@@ -31,8 +32,8 @@ except ImportError as e:
     ) from e
 
 
-STATE_W = 96  # less than Atari 160x192
-STATE_H = 96
+STATE_W = 192  # less than Atari 160x192
+STATE_H = 192
 VIDEO_W = 600
 VIDEO_H = 400
 WINDOW_W = 1000
@@ -62,6 +63,7 @@ class FrictionDetector(contactListener):
         contactListener.__init__(self)
         self.env = env
         self.lap_complete_percent = lap_complete_percent
+        
 
     def BeginContact(self, contact):
         self._contact(contact, True)
@@ -217,6 +219,7 @@ class CarRacing(gym.Env, EzPickle):
         lap_complete_percent: float = 0.95,
         domain_randomize: bool = False,
         continuous: bool = True,
+        
     ):
         EzPickle.__init__(
             self,
@@ -230,6 +233,8 @@ class CarRacing(gym.Env, EzPickle):
         self.domain_randomize = domain_randomize
         self.lap_complete_percent = lap_complete_percent
         self._init_colors()
+        self.steering_history = deque([0.0, 0.0], maxlen=3)
+
 
         self.contactListener_keepref = FrictionDetector(self, self.lap_complete_percent)
         self.world = Box2D.b2World((0, 0), contactListener=self.contactListener_keepref)
@@ -542,10 +547,10 @@ class CarRacing(gym.Env, EzPickle):
         if image is None:
             return "Error: No image provided to read_sensors"
 
-        sensor_location = (49, 78)
+        sensor_location = (96, 156)
         sensor_reading = []
         sensor_directions = ["left_horizontal", "right_horizontal", "right_diagonal", "left_diagonal", "vertical"]
-        sensor_normalization = [30,30,85,85,78,100]
+        sensor_normalization = [60,60,170,170,156,100]
         
         def detect_color_change(image_observation, sensor_location, direction='horizontal', max_distance=78):
             if image_observation is None:
@@ -610,6 +615,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
         self.t += 1.0 / FPS
         image = self._render("state_pixels")
+        cv2.imwrite("frame.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         self.state = self.read_sensors(image)
         
         step_reward = 0
@@ -617,7 +623,18 @@ class CarRacing(gym.Env, EzPickle):
         truncated = False
         info = {}
         if action is not None:  # First step without action, called from reset()
+            
+            steer_val = -action[0]
+            self.car.steer(steer_val)
             self.reward -= 0.1
+            self.steering_history.append(steer_val)
+            #penalty for rapid steering wheel changes
+            if (
+                abs(self.steering_history[0]) > 0.2 and
+                abs(steer_val) > 0.2 and
+                np.sign(self.steering_history[0]) != np.sign(steer_val)
+            ):
+                self.reward -= 0.2
             # We actually don't want to count fuel spent, we want car to be faster.
             # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
             self.car.fuel_spent = 0.0
@@ -700,7 +717,7 @@ class CarRacing(gym.Env, EzPickle):
 
 
         # Render distance text (White text with Black background)
-        distance_text = font.render(f"Current Speed: {self.speed:.2f} m", True, (255, 255, 255), (0, 0, 0))
+        distance_text = font.render(f"Current Speed: {self.speed:.2f} m/s", True, (255, 255, 255), (0, 0, 0))
         distance_text_rect = distance_text.get_rect()
         distance_text_rect.center = (200, WINDOW_H - WINDOW_H * 3.5 / 40.0)
         self.surf.blit(distance_text, distance_text_rect)
