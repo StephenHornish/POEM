@@ -231,8 +231,8 @@ if __name__ == "__main__":
         RESULTS_BASE_DIR = os.path.join("results", "cart_results")
         gym_environment = "MountainCarContinuous-v0"
         MODEL_DIRS = {
-            "PPO": "ppo_tuned_run_cart",
-            "POEM": "poem_tuned_run_cart"
+            "PPO": "ppo_tuned_run_mountaincar",
+            "POEM": "poem_tuned_run_mountaincar"
         }
     else:
         raise ValueError(f"Unknown environment {args.env}")

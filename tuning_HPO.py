@@ -106,7 +106,7 @@ def optimize(trial):
             ]
         })
 
-    if(ENV == "BipedalWalker-v3" or ENV == "MountainCarContinuous-v0" ):
+    if(ENV == "BipedalWalker-v3" or ENV == "MountainCarContinuous-v0" or ENV == "CarRacing-v3"  ):
         env = gym.make(ENV)
     else:
         env = gym.make(ENV, continuous=True)

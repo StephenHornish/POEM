@@ -14,7 +14,7 @@ TRAIN = True
 LOG_DIR = os.path.join("trained_models", "ppo_tuned_run_mountaincar")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-TIMESTEPS = 200000
+TIMESTEPS = 100000
 EVAL_EPISODES = 10
 
 # ---------------------------------------------------------------------
@@ -25,20 +25,22 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
     env = gym.make("MountainCarContinuous-v0")
 
     model = PPO(
-        "MlpPolicy",
+    "MlpPolicy",
         env,
         verbose=1,
         learning_rate=0.003,
         clip_range=0.2,
-        ent_coef=0.001,
+        ent_coef=0.05,
         gae_lambda=1.0,
         batch_size=64,
         n_epochs=27,
         n_steps=1024,
         vf_coef=0.5,
+        policy_kwargs=dict(log_std_init=1.0),  
         tensorboard_log=os.path.join(run_dir, "tensorboard"),
-        device = "cpu",
+        device="cpu",
     )
+
 
     start_time = time.time()
     model.learn(total_timesteps=timesteps)
