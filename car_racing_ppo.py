@@ -18,6 +18,15 @@ os.makedirs(LOG_DIR, exist_ok=True)
 TIMESTEPS = 500000
 EVAL_EPISODES = 1
 
+#Decorator 
+def count_forward_passes(method):
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        return method(*args, **kwargs)
+    wrapper.calls = 0
+    return wrapper
+
+
 # ---------------------------------------------------------------------
 # Training and evaluation
 # ---------------------------------------------------------------------
@@ -41,10 +50,22 @@ def train_and_evaluate(timesteps, eval_episodes, run_dir):
         device="cpu",
     )
 
+    model.policy.forward = count_forward_passes(model.policy.forward)
+
     start_time = time.time()
     model.learn(total_timesteps=timesteps)
     train_time = time.time() - start_time
 
+    # Retrieve forward pass count
+    forward_pass_count = model.policy.forward.calls
+    print(f"Total forward passes during training: {forward_pass_count}")
+
+    # Save forward pass count and traintime to txt file
+    with open(os.path.join(run_dir, "forward_pass_count.txt"), "w") as f:
+        f.write(str(forward_pass_count))
+        f.write(f"Training Time (seconds): {train_time:.2f}\n")
+
+    # Save model
     model_path = os.path.join(run_dir, "model.zip")
     model.save(model_path)
 

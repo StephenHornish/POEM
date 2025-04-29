@@ -64,7 +64,7 @@ class POEM(PPO):
         
         # Diversity bonus based on KL divergence
         kl_divergence = self.compute_kl_divergence(policy, self.theta_avg)
-        loss_diversity = self.lambda_diversity * kl_divergence
+        loss_diversity = -self.lambda_diversity * kl_divergence
         
         # Total loss
         total_loss = policy_loss + loss_diversity + self.ent_coef * entropy_loss + self.vf_coef * value_loss

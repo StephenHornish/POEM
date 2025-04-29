@@ -1,0 +1,3 @@
+lander_results:
+  T-statistic: -1.87072207
+  P-value    : 0.07778803

@@ -1,0 +1,3 @@
+cart_results:
+  T-statistic: -6.88461329
+  P-value    : 0.00001018

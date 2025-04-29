@@ -1,0 +1,16 @@
+bipedal_results:
+  T-statistic: -0.41093387
+  P-value    : 0.68455190
+
+car_results:
+  T-statistic: -6.41202079
+  P-value    : 0.00018119
+
+cart_results:
+  T-statistic: -6.88461329
+  P-value    : 0.00001018
+
+lander_results:
+  T-statistic: -1.87072207
+  P-value    : 0.07778803
+

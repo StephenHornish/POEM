@@ -53,17 +53,6 @@ This repository contains code for training a reinforcement learning agent using 
   python training.py
   ```
 
-- To tune hyperparameters for POEM and PPO
-```bash
-  python tuning.py
-  ```
-
-- To review results of tuning hyperparameters
-```bash
-  python tuning_review.py
-  ```
-
-
 ### 5. Important: Environment File Replacement
 
 The training algorithm relies on a modified version of the Car Racing environment. You need to:
@@ -77,11 +66,58 @@ The training algorithm relies on a modified version of the Car Racing environmen
 
    **Note:** This manual replacement is required for the training algorithm to work correctly. We're working on a more elegant solution for future updates.
 
+
+### 6. Training a Model
+
+Each environment has an associated training script named using the format: <environment>_<algorithm>.py For example, to run PPO on the CarRacing environment:python car_racing_ppo.py
+
+1. Model Creation 
+A model is initialized using either PPO or POEM. POEM is an extension of Stable Baselines3's PPO implementation, with five additional hyperparameters based on the research paper. These hyperparameters have been tuned, but users can modify them as
+2. Training 
+The model is trained for a set number of timesteps, defined by the TIMESTEPS variable
+3. Initial Evaluation 
+After training, the model is evaluated on 10 randomly generated episodes. Visual feedback is provided to help debug and analyze agent behavior.
+**Note:** Deterministic evaluation and reward data collection are handled by a separate script.
+4. Running Pretrained Models
+If a model has already been trained, you can view it by setting TRAIN = False.
+This will load the saved model and run it in random environments for visual inspection and debugging 
+5. Model Storage
+Trained models are saved in the trained_models/ directory. These saved models are later used by the evaluate_model script for deterministic evaluation and performance comparison. This folder also stores the Tensorboard logs showing the trianing progress. 
+
+
+### 7. Evaluating Model 
+To evaluate a model you need both a PPO and POEM model trained for the same environment script is ran using format: evaluate_model.py --env <environment>  with an optional --human flag if the user wants to visualize what is happening.
+1. POEM/PPO folders 
+Containg respective Training performance, Stepwise reward and average action space graphs along with CSV files for the models indiviual performance. 
+2. Comparison Graphs
+In the result directory there will be two graphs showing how the models compared to one another in the frequency specific actions and a comprison of total rewards. 
+3. T test results    
+Contains a text file with the T Test and P values of the two sets of rewards during training. 
+4. Methodology 
+Each algorithm is evaluated using a preseeded environment the number of enviorments a model is tested on is determined by the valriable LONG_TRAINING_EVAL_EPISODES 
+
+### 8. Hyper Parameter Tuning 
+There are two ways to hyper parameter tune we have provided a grid search and HPO tuning
+1. Grid Search
+Done by a script called tuning_grid_search which will iterate through the hyper parameters and find the best combination. GRIDSEARCH_TIMESTEP determines how long a model is trianed before evaluated and GRIDSEARCH_EVAL_EPISODES determines on how many environments a model is ran on to determine its average reward. Once ran the data will be saved in the folder tuning_grid_search and the script tuning_review_grid_search will display which model had the best hyper parameters. 
+- To tune hyperparameters for POEM and PPO using Grid Search
+```bash
+  python tuning.py
+  ```
+
+- To review results of tuning hyperparameters using Grid Search
+```bash
+  python tuning_review.py
+  ```
+2. HPO 
+Done through optuna this utalizes a HPO algorithm to approximate the optimal hyper parameters. To use this script use the following syntax python tuning_HPO.py --model <model_type>--env <environment> --trials <integer> --timestep <integer>. This will gerneate a folder in tuning_hpo directory containg graphs showing which hyper parameters where most critical and graphing which hyperparameters resulted in the best rewards. In addition a text file will be provided listing the optimal set of hyper parameters. 
+
+
+
 ## Tutorial
 
 For a tutorial on setting up project (https://www.youtube.com/watch?v=gMgj4pSHLww&ab_channel=JohnnyCode)
 
-<!-- ## License -->
 
 
 
@@ -89,3 +125,4 @@ For a tutorial on setting up project (https://www.youtube.com/watch?v=gMgj4pSHLw
 
 - Gymnasium (formerly OpenAI Gym) for the Car Racing environment
 - Stable Baselines3 for the PPO implementation
+- Optuna for Hyperparameter tuning 

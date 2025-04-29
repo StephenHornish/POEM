@@ -1,0 +1,3 @@
+bipedal_results:
+  T-statistic: -0.41093387
+  P-value    : 0.68455190

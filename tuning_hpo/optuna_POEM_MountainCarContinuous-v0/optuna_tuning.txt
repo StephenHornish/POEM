@@ -1,16 +1,16 @@
 Best Hyperparameters:
-learning_rate: 0.003
-clip_range: 0.2
+learning_rate: 3e-06
+clip_range: 0.1
 ent_coef: 0
-gae_lambda: 0.9
-batch_size: 32
+gae_lambda: 1.0
+batch_size: 256
 n_epochs: 6
 n_steps: 2048
 vf_coef: 0.7
-kl_threshold: 0.2
-sigma_min: 0.06
-sigma_max: 0.1
-beta: 0.7
-lambda_diversity: 0.25
+kl_threshold: 0.075
+sigma_min: 0.08
+sigma_max: 0.15
+beta: 0.9
+lambda_diversity: 0.2
 
-Best Value (mean reward): 93.53217983873377
+Best Value (mean reward): -6.409157040566192e-08
