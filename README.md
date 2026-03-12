@@ -72,7 +72,7 @@ The training algorithm relies on a modified version of the Car Racing environmen
 Each environment has an associated training script named using the format: <environment>_<algorithm>.py For example, to run PPO on the CarRacing environment:python car_racing_ppo.py
 
 1. Model Creation 
-A model is initialized using either PPO or POEM. POEM is an extension of Stable Baselines3's PPO implementation, with five additional hyperparameters based on the research paper. These hyperparameters have been tuned, but users can modify them as
+A model is initialized using either PPO or POEM. POEM is an extension of Stable Baselines3's PPO implementation, with five additional hyperparameters based on the research paper. These hyperparameters have been tuned, but users can modify them as needed
 2. Training 
 The model is trained for a set number of timesteps, defined by the TIMESTEPS variable
 3. Initial Evaluation 
